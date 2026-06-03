@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/license-MIT-green">
 </p>
 
-<h1 align="center">🐾 OurClaw — 你的全能 AI 智能爪</h1>
+<h1 align="center">🐾 OurClaw — 你的 AI 学术龙虾 - 技能扩展十分方便</h1>
 
 <p align="center">
   <b>可扩展 · 可编程 · 可对话 · 会技能</b><br>
