@@ -200,10 +200,10 @@ OurClaw/
 # DeepSeek 配置（核心 LLM）
 DEEPSEEK_API_KEY=sk-你的key-粘贴到这里
 DEEPSEEK_BASE_URL=https://api.deepseek.com
-DEEPSEEK_MODEL=deepseek-chat
+DEEPSEEK_MODEL=deepseek-v4-flash
 ```
 
-> 💡 `DEEPSEEK_MODEL` 可选值：`deepseek-chat`（默认）、`deepseek-reasoner`（推理增强版，适合复杂逻辑任务）
+> 💡 `DEEPSEEK_MODEL` 可选值：`deepseek-v4-flash`（默认）、`deepseek-v4-pro`（推理增强版，适合复杂逻辑任务）
 
 ---
 
