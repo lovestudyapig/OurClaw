@@ -283,13 +283,7 @@ pip install -r requirements.txt
 
 ---
 
-## 📄 许可证
-
-MIT License © 2024 OurClaw
-
----
-
 <p align="center">
-  <b>🐾 OurClaw — 你的智能爪，抓取一切可能</b><br>
+  <b>🐾 OurClaw — 你的智能小龙瞎，自动完成你的任务</b><br>
   <i>从今天开始，让 AI 替你干活</i>
 </p>
