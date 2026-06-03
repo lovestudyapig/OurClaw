@@ -183,22 +183,79 @@ OurClaw/
 
 ## ⚙️ 配置说明
 
-在项目根目录创建 `.env` 文件：
+在项目根目录创建 `.env` 文件，配置以下三个 API Key。以下是各 Key 的申请教程 👇
+
+---
+
+### 🔑 1. DeepSeek API Key（核心 LLM，必须）
+
+| 项目 | 说明 |
+|------|------|
+| **用途** | 驱动 OurClaw 的大模型对话与推理能力 |
+| **申请地址** | [https://platform.deepseek.com/api_keys](https://platform.deepseek.com/api_keys) |
+| **注册步骤** | ① 打开链接 → ② 注册/登录账号 → ③ 进入控制台 → ④ 左侧「API Keys」→ ⑤ 点击「创建 API Key」→ ⑥ 复制生成的 `sk-...` 密钥 |
+| **费用** | 新用户有免费额度，后续按量计费，价格极低 |
 
 ```env
 # DeepSeek 配置（核心 LLM）
-DEEPSEEK_API_KEY=sk-your-key-here
+DEEPSEEK_API_KEY=sk-你的key-粘贴到这里
 DEEPSEEK_BASE_URL=https://api.deepseek.com
 DEEPSEEK_MODEL=deepseek-chat
+```
 
+> 💡 `DEEPSEEK_MODEL` 可选值：`deepseek-chat`（默认）、`deepseek-reasoner`（推理增强版，适合复杂逻辑任务）
+
+---
+
+### 🔑 2. Tavily API Key（联网搜索，建议配置）
+
+| 项目 | 说明 |
+|------|------|
+| **用途** | 让 OurClaw 具备联网搜索能力（查新闻、查资料、实时数据） |
+| **申请地址** | [https://app.tavily.com/sign-in](https://app.tavily.com/sign-in) |
+| **注册步骤** | ① 打开链接 → ② 点击 **Sign up** 注册（支持 Google / GitHub 账号）→ ③ 登录后进入 Dashboard → ④ 在 **API Keys** 页面点击 **Create API Key** → ⑤ 复制生成的 `tvly-...` 密钥 |
+| **免费额度** | 每月 1000 次搜索请求，个人使用完全够用 |
+
+```env
 # 可选：Tavily 搜索 API Key（联网搜索用）
-TAVILY_API_KEY=tvly-your-key-here
+TAVILY_API_KEY=tvly-你的key-粘贴到这里
+```
 
+> ⚠️ 不配置此 key 则联网搜索功能不可用。
+
+---
+
+### 🔑 3. DashScope API Key（语音识别，按需配置）
+
+| 项目 | 说明 |
+|------|------|
+| **用途** | 使用阿里通义千问 Qwen 多模态模型进行语音转文字（支持 WAV/MP3/M4A 等格式） |
+| **申请地址** | [https://bailian.console.aliyun.com/](https://bailian.console.aliyun.com/) |
+| **注册步骤** | ① 打开链接 → ② 使用阿里云账号登录（未注册则先注册）→ ③ 进入 **百炼** 控制台 → ④ 左侧菜单 **API-KEY 管理** → ⑤ 点击 **创建 API-KEY** → ⑥ 复制生成的 `sk-...` 密钥 |
+| **费用** | 新用户有免费额度；语音识别模型按字符计费，价格低廉 |
+
+```env
 # 可选：DashScope API Key（语音识别用）
-DASHSCOPE_API_KEY=sk-your-dashscope-key
+DASHSCOPE_API_KEY=sk-你的key-粘贴到这里
+```
+
+> ⚠️ 不配置此 key 则语音识别功能不可用。
+
+---
+
+### ✅ 配置完成后验证
+
+配置好 `.env` 后启动 Claw，若看到类似以下日志说明配置成功：
+
+```
+✅ DeepSeek API 已连接
+✅ Tavily 搜索 API 已连接
+✅ DashScope 语音识别 API 已连接
 ```
 
 ---
+
+
 
 ## 📦 依赖安装
 
