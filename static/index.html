@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claw Web UI</title>
+<script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', sans-serif; min-height: 100vh; overflow-y: auto; background: #f5f7fa; color: #2c3e50; }
+.container { display: flex; height: 100vh; }
+
+/* 左侧 */
+.sidebar { width: 280px; min-width: 280px; background: #ffffff; display: flex; flex-direction: column; border-right: 1px solid #e8ecf1; }
+.sidebar-header { padding: 14px 16px 10px; border-bottom: 1px solid #e8ecf1; }
+.sidebar-header h3 { font-size: 15px; color: #1a73e8; margin-bottom: 10px; font-weight: 600; }
+.dir-picker-row { display: flex; gap: 6px; }
+.dir-picker-row label { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; background: #1a73e8; color: #fff; padding: 8px 10px; border-radius: 8px; font-size: 12px; font-weight: 500; transition: background .15s; }
+.dir-picker-row label:hover { background: #1557b0; }
+.dir-picker-row input { display: none; }
+.refresh-btn { background: #f1f3f5; color: #444; border: 1px solid #dce3ec; border-radius: 8px; padding: 8px 10px; cursor: pointer; font-size: 14px; transition: all .15s; white-space: nowrap; }
+.refresh-btn:hover { background: #e2e6ea; }
+.file-tree { flex: 1; overflow-y: auto; padding: 4px 8px; font-size: 13px; }
+.folder-row, .file-row { display: flex; align-items: center; gap: 4px; padding: 3px 6px; cursor: default; border-radius: 6px; white-space: nowrap; }
+.folder-row:hover, .file-row:hover { background: #eef3fc; }
+.folder-row { color: #1a73e8; font-weight: 500; }
+.file-row { color: #444; padding-left: 26px; cursor: pointer; }
+.file-row:hover { background: #dce6f5; }
+.toggle-btn { width: 16px; text-align: center; cursor: pointer; flex-shrink: 0; font-size: 10px; color: #99a7b9; user-select: none; }
+.toggle-btn:hover { color: #1a73e8; }
+.children { padding-left: 16px; }
+.hidden { display: none; }
+.file-path { padding: 8px 12px; font-size: 11px; color: #99a7b9; border-top: 1px solid #e8ecf1; word-break: break-all; background: #fafbfc; }
+
+/* 中间 */
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; background: #f5f7fa; }
+.chat-header { padding: 14px 24px; background: #ffffff; border-bottom: 1px solid #e8ecf1; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+.chat-header h2 { font-size: 16px; color: #1a73e8; font-weight: 600; }
+.chat-header .status { font-size: 12px; color: #99a7b9; }
+.chat-scroll { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+.messages { padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; }
+.msg { max-width: 78%; padding: 14px 18px; border-radius: 16px; line-height: 1.7; font-size: 14px; word-wrap: break-word; white-space: pre-wrap; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.msg.user { align-self: flex-end; background: #1a73e8; color: #fff; border-bottom-right-radius: 4px; }
+.msg.assistant { align-self: flex-start; background: #ffffff; color: #2c3e50; border: 1px solid #e8ecf1; border-bottom-left-radius: 4px; }
+.msg.system { align-self: center; background: #eef3fc; color: #5a6a7a; font-size: 12px; border: 1px solid #dce3ec; max-width: 90%; text-align: center; border-radius: 20px; padding: 8px 18px; }
+.msg .msg-time { font-size: 11px; color: rgba(255,255,255,0.55); margin-top: 4px; }
+.msg.assistant .msg-time { color: #99a7b9; }
+
+/* 输入区 */
+.input-area { padding: 12px 24px; background: #ffffff; border-top: 1px solid #e8ecf1; display: flex; gap: 8px; align-items: flex-end; flex-shrink: 0; }
+.input-area textarea { flex: 1; background: #f5f7fa; border: 1px solid #dce3ec; color: #2c3e50; padding: 10px 14px; border-radius: 10px; font-size: 14px; resize: none; outline: none; min-height: 42px; max-height: 120px; line-height: 1.5; transition: border .15s; }
+.input-area textarea:focus { border-color: #1a73e8; }
+.btn { border: none; padding: 10px 18px; border-radius: 10px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 6px; white-space: nowrap; font-weight: 500; transition: all .15s; flex-shrink: 0; }
+.btn-primary { background: #1a73e8; color: #fff; }
+.btn-primary:hover { background: #1557b0; }
+.btn-primary:disabled { background: #b0c4de; cursor: not-allowed; }
+.btn-record { background: #34a853; color: #fff; }
+.btn-record:hover { background: #2d8f47; }
+.btn-record.recording { background: #ea4335; animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.7; } }
+.btn-secondary { background: #f1f3f5; color: #444; }
+.btn-secondary:hover { background: #e2e6ea; }
+
+/* 文件预览区（页面底部） */
+.file-preview { background: #ffffff; border-top: 1px solid #e8ecf1; display: none; }
+.file-preview.open { display: block; }
+.file-preview-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 24px; background: #1a73e8; color: #fff; }
+.file-preview-header span { font-size: 13px; color: #fff; font-weight: 600; }
+.file-preview-header button { background: none; border: none; color: rgba(255,255,255,0.7); cursor: pointer; font-size: 20px; padding: 0 6px; line-height: 1; }
+.file-preview-header button:hover { color: #fff; }
+.file-preview-content { overflow-y: auto; padding: 16px 24px; font-family: 'SF Mono', Monaco, Consolas, monospace; font-size: 13px; line-height: 1.6; color: #333; white-space: pre-wrap; max-height: 60vh; background: #fafbfc; }
+
+/* 右侧 */
+.log-panel { width: 320px; min-width: 320px; background: #ffffff; display: flex; flex-direction: column; border-left: 1px solid #e8ecf1; overflow: hidden; }
+.log-header { padding: 14px 16px; border-bottom: 1px solid #e8ecf1; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+.log-header h3 { font-size: 14px; color: #1a73e8; font-weight: 600; }
+.log-header .log-actions { display: flex; gap: 6px; }
+.log-header .btn-sm { padding: 5px 10px; font-size: 11px; border-radius: 6px; }
+.log-content { flex: 1; overflow-y: auto; padding: 8px; font-family: 'SF Mono', Monaco, Consolas, monospace; font-size: 12px; }
+.log-entry { padding: 7px 10px; margin-bottom: 4px; border-radius: 6px; border-left: 3px solid transparent; line-height: 1.5; background: #fafbfc; }
+.log-entry.thinking { border-left-color: #1a73e8; background: #eef3fc; }
+.log-entry.tool_call { border-left-color: #f9ab00; background: #fef7e0; }
+.log-entry.tool_result { border-left-color: #34a853; background: #e6f4ea; }
+.log-entry.final { border-left-color: #1a73e8; background: #eef3fc; }
+.log-entry.error { border-left-color: #ea4335; background: #fce8e6; }
+.log-entry .log-type { font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: .5px; }
+.log-entry .log-name { color: #5a6a7a; margin-left: 4px; font-weight: 600; }
+.log-entry .log-body { margin-top: 3px; color: #444; word-break: break-all; max-height: 80px; overflow: hidden; }
+.log-empty { color: #99a7b9; text-align: center; padding: 40px 20px; font-size: 13px; }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #dce3ec; border-radius: 3px; }
+
+/* 录音指示器 */
+.recording-indicator { display: none; position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(234,67,53,0.92); color: #fff; padding: 12px 24px; border-radius: 24px; font-size: 14px; z-index: 100; align-items: center; gap: 10px; box-shadow: 0 4px 16px rgba(234,67,53,0.3); }
+.recording-indicator.visible { display: flex; }
+.recording-indicator .dot { width: 10px; height: 10px; background: #fff; border-radius: 50%; animation: blink 0.8s infinite; }
+@keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+</style>
+</head>
+<body>
+
+<div class="recording-indicator" id="recordingIndicator"><span class="dot"></span> 正在录音...</div>
+
+<div class="container">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h3>📁 工作目录</h3>
+      <div class="dir-picker-row">
+        <label>📂 选择文件夹
+          <input type="file" id="folderPicker" webkitdirectory onchange="onFolderSelected(event)"></label>
+        <button class="refresh-btn" onclick="refreshFileTree()" title="刷新文件树">⟳</button>
+      </div>
+    </div>
+    <div class="file-tree" id="fileTree">
+      <div style="color:#99a7b9;padding:24px;text-align:center;font-size:13px;">选择工作文件夹后<br>在此显示目录结构<br>点击文件可预览</div>
+    </div>
+    <div class="file-path" id="currentPath">未选择工作目录</div>
+  </div>
+
+  <div class="main">
+    <div class="chat-header">
+      <h2>🐾 Claw 对话</h2>
+      <div><span class="status" id="statusText">就绪</span>
+        <button class="btn btn-secondary btn-sm" onclick="clearHistory()" style="margin-left:8px;font-size:11px;padding:4px 10px;">清空</button>
+      </div>
+    </div>
+    <div class="chat-scroll" id="chatScroll">
+      <div class="messages" id="messages"></div>
+    </div>
+    <div class="input-area">
+      <button class="btn btn-record" id="recordBtn" onclick="toggleRecording()">🎤 录音</button>
+      <textarea id="chatInput" rows="1" placeholder="输入消息 (Enter 发送, Shift+Enter 换行)" onkeydown="onInputKeydown(event)"></textarea>
+      <button class="btn btn-primary" id="sendBtn" onclick="sendMessage()">发送 ➤</button>
+    </div>
+  </div>
+
+  <div class="log-panel">
+    <div class="log-header">
+      <h3>📋 执行日志</h3>
+      <div class="log-actions">
+        <button class="btn btn-secondary btn-sm" onclick="clearLog()">清空</button>
+        <button class="btn btn-primary btn-sm" onclick="exportLog()">导出</button>
+      </div>
+    </div>
+    <div class="log-content" id="logContent"><div class="log-empty">等待执行任务...</div></div>
+  </div>
+</div>
+
+<!-- 页面底部：文件预览区 -->
+<div class="file-preview" id="filePreview">
+  <div class="file-preview-header">
+    <span id="previewFilename">📄 选择文件以预览</span>
+    <button onclick="closeFilePreview()">✕</button>
+  </div>
+  <div class="file-preview-content" id="previewContent"></div>
+</div>
+
+<script>
+let mediaRecorder = null, audioContext = null, audioChunks = [], isRecording = false, currentDir = '';
+
+// ====== 本地文件存储（webkitdirectory 选中的文件） ======
+let _localFiles = {};  // webkitRelativePath -> File
+
+// ====== 文件夹选择 ======
+async function onFolderSelected(event) {
+  const files = event.target.files;
+  if (!files || files.length === 0) return;
+  currentDir = files[0].webkitRelativePath.split('/')[0];
+  // 存储所有文件对象，用于后续在浏览器中直接读取内容
+  _localFiles = {};
+  for (const f of files) {
+    _localFiles[f.webkitRelativePath] = f;
+  }
+  document.getElementById('currentPath').textContent = `当前: ${currentDir}`;
+  addLogEntry('final','文件系统',`已加载 ${files.length} 个文件`);
+  renderCollapsibleTree(files);
+  // 尝试设为工作主目录
+  try {
+    const wdRes = await fetch('/api/set-work-dir', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({path:currentDir})});
+    const wdData = await wdRes.json();
+    if (wdData.message) addLogEntry('final','工作目录', wdData.message);
+  } catch(e) { addLogEntry('error','工作目录', e.message); }
+}
+
+// ====== 可折叠文件树 ======
+function renderCollapsibleTree(files) {
+  const root = {children: {}};
+  for (const f of files) {
+    const parts = f.webkitRelativePath.split('/');
+    let node = root;
+    for (let i = 0; i < parts.length; i++) {
+      if (!node.children[parts[i]]) {
+        node.children[parts[i]] = {
+          children: {},
+          isFile: i === parts.length - 1,
+          name: parts[i],
+          // 存完整的 webkitRelativePath，方便用 File API 读取
+          fullPath: i === parts.length - 1 ? f.webkitRelativePath : '',
+        };
+      }
+      node = node.children[parts[i]];
+    }
+  }
+  function renderNode(node, depth) {
+    let h = '';
+    const keys = Object.keys(node.children).sort((a, b) => {
+      const aD = !node.children[a].isFile, bD = !node.children[b].isFile;
+      if (aD && !bD) return -1; if (!aD && bD) return 1; return a.localeCompare(b);
+    });
+    for (const k of keys) {
+      const c = node.children[k];
+      if (!c.isFile) {
+        const id = 'd' + Math.random().toString(36).substr(2, 6);
+        const hidden = depth >= 1 ? ' hidden' : '';
+        h += `<div class="folder-row" style="padding-left:${12+depth*16}px"><span class="toggle-btn" onclick="toggleFolder('${id}')">▶</span><span>📁</span><span>${k}</span></div><div class="children${hidden}" id="${id}">${renderNode(c, depth + 1)}</div>`;
+      }
+    }
+    for (const k of keys) {
+      const c = node.children[k];
+      if (c.isFile) {
+        const fp = c.fullPath || k;
+        h += `<div class="file-row" style="padding-left:${26+depth*16}px" onclick="previewFile('${escAttr(fp)}')">📄 ${k}</div>`;
+      }
+    }
+    return h;
+  }
+  document.getElementById('fileTree').innerHTML = renderNode(root, 0);
+}
+
+function toggleFolder(id){const el=document.getElementById(id);if(!el)return;const btn=el.parentElement.querySelector('.toggle-btn');el.classList.toggle('hidden');btn.textContent=el.classList.contains('hidden')?'▶':'▼';}
+
+// ====== 刷新文件树（从后端重新加载） ======
+async function refreshFileTree() {
+  addLogEntry('tool_call','文件系统','刷新文件树...');
+  try {
+    const dirRes = await fetch('/api/current-dir');
+    const dirData = await dirRes.json();
+    if (!dirData.work_dir) { addLogEntry('error','文件系统','未设置工作目录'); return; }
+
+    // 递归构建嵌套文件树
+    async function fetchTree(dirPath) {
+      const res = await fetch('/api/files?path=' + encodeURIComponent(dirPath));
+      const data = await res.json();
+      if (data.error) return { children: {} };
+      const node = { children: {} };
+      // 先处理目录，再处理文件
+      const dirs = data.entries.filter(e => e.type === 'dir');
+      const files = data.entries.filter(e => e.type === 'file');
+      for (const d of dirs) {
+        const child = await fetchTree(d.path);
+        child.isFile = false; child.name = d.name; child.fullPath = d.path;
+        node.children[d.name] = child;
+      }
+      for (const f of files) {
+        node.children[f.name] = { children: {}, isFile: true, name: f.name, fullPath: f.path };
+      }
+      return node;
+    }
+
+    const root = await fetchTree(dirData.work_dir);
+    let totalItems = 0;
+
+    function renderNode(node, depth) {
+      let h = '';
+      const keys = Object.keys(node.children).sort((a, b) => {
+        const aD = !node.children[a].isFile, bD = !node.children[b].isFile;
+        if (aD && !bD) return -1; if (!aD && bD) return 1; return a.localeCompare(b);
+      });
+      for (const k of keys) {
+        const c = node.children[k];
+        if (!c.isFile) {
+          const id = 'd' + Math.random().toString(36).substr(2, 6);
+          const hidden = depth >= 1 ? ' hidden' : '';
+          h += `<div class="folder-row" style="padding-left:${12+depth*16}px"><span class="toggle-btn" onclick="toggleFolder('${id}')">▶</span><span>📁</span><span>${k}</span></div><div class="children${hidden}" id="${id}">${renderNode(c, depth + 1)}</div>`;
+        }
+      }
+      for (const k of keys) {
+        const c = node.children[k];
+        if (c.isFile) {
+          totalItems++;
+          h += `<div class="file-row" style="padding-left:${26+depth*16}px" onclick="previewFile('${escAttr(c.fullPath || k)}')">📄 ${k}</div>`;
+        }
+      }
+      return h;
+    }
+
+    document.getElementById('fileTree').innerHTML = renderNode(root, 0);
+    addLogEntry('final','文件系统',`已刷新，共 ${totalItems} 个文件`);
+  } catch(e) { addLogEntry('error','文件系统',e.message); }
+}
+
+// ====== 文件预览（页面底部） ======
+async function previewFile(filePath) {
+  if (!filePath) return;
+  const fileName = filePath.split('/').pop();
+  addLogEntry('tool_call','文件预览',`读取: ${fileName}`);
+  const previewEl = document.getElementById('filePreview');
+  const nameEl = document.getElementById('previewFilename');
+  const contentEl = document.getElementById('previewContent');
+
+  nameEl.textContent = `📄 ${fileName}`;
+  contentEl.textContent = '⏳ 加载中...';
+  previewEl.classList.add('open');
+  setTimeout(() => previewEl.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+
+  try {
+    let content = '';
+
+    // 优先：浏览器本地文件（webkitdirectory 选择的）
+    const localFile = _localFiles[filePath];
+    if (localFile) {
+      content = await localFile.text();
+    } else {
+      // 后备：通过后端 API 读取
+      const res = await fetch('/api/read-file?path=' + encodeURIComponent(filePath));
+      const data = await res.json();
+      if (data.error) { contentEl.textContent = '❌ ' + data.error; return; }
+      if (data.truncated) { content = data.content + '\n\n[文件过大，已截断]'; }
+      else { content = data.content; }
+    }
+
+    contentEl.textContent = content;
+    addLogEntry('final','文件预览',`已加载 ${fileName}`);
+  } catch(e) {
+    contentEl.textContent = '❌ 读取失败: ' + e.message;
+  }
+}
+
+function closeFilePreview() {
+  document.getElementById('filePreview').classList.remove('open');
+  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+}
+
+function escAttr(t){return t.replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;');}
+
+// ====== 聊天 ======
+async function sendMessage(text) {
+  const input = document.getElementById('chatInput');
+  const msgText = text || input.value.trim();
+  if(!msgText)return;
+  const sendBtn=document.getElementById('sendBtn');sendBtn.disabled=true;
+  document.getElementById('statusText').textContent='处理中...';
+  addMessage(msgText,'user');input.value='';input.style.height='auto';
+  const loadingId=addMessage('⏳ 思考中...','assistant');
+  try {
+    const res=await fetch('/api/chat/stream',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msgText})});
+    const reader=res.body.getReader(),decoder=new TextDecoder();
+    while(true){const{done,value}=await reader.read();if(done)break;const chunk=decoder.decode(value,{stream:true});for(const line of chunk.split('\n')){if(line.startsWith('data: '))try{handleEvent(JSON.parse(line.slice(6)),loadingId);}catch(e){}}}
+  } catch(e){const el=document.getElementById(loadingId);if(el)el.textContent='❌ 请求失败: '+e.message;}
+  sendBtn.disabled=false;document.getElementById('statusText').textContent='就绪';
+}
+
+function handleEvent(event,loadingId){
+  const el=document.getElementById(loadingId);if(!el)return;
+  switch(event.type){
+    case 'thinking':el.textContent=event.content||'思考中...';break;
+    case 'tool_call':addLogEntry('tool_call',`调用: ${event.name}`,JSON.stringify(event.args||{}));break;
+    case 'tool_result':addLogEntry('tool_result',`结果: ${event.name}`,(event.content||'').substring(0,200));break;
+    case 'final':el.textContent=event.content||'';break;
+    case 'error':el.textContent='❌ '+(event.content||'');addLogEntry('error','错误',event.content);break;
+  }
+}
+
+function addMessage(content,type){
+  const c=document.getElementById('messages');
+  const id='msg-'+Date.now()+'-'+Math.random().toString(36).substr(2,5);
+  const div=document.createElement('div');div.className='msg '+type;div.id=id;div.textContent=content;
+  const t=document.createElement('div');t.className='msg-time';t.textContent=new Date().toLocaleTimeString();
+  div.appendChild(t);c.appendChild(div);
+  document.getElementById('chatScroll').scrollTop = document.getElementById('chatScroll').scrollHeight;
+  return id;
+}
+
+function onInputKeydown(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
+document.getElementById('chatInput').addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';});
+
+// ====== 录音→MP3→保存→Claw ======
+async function toggleRecording() {
+  const btn=document.getElementById('recordBtn'),indicator=document.getElementById('recordingIndicator');
+  if(!isRecording){
+    try {
+      const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+      audioContext=new AudioContext();
+      const source=audioContext.createMediaStreamSource(stream);
+      const processor=audioContext.createScriptProcessor(2048,1,1);
+      let leftChannel=[];
+      processor.onaudioprocess=function(e){leftChannel.push(new Float32Array(e.inputBuffer.getChannelData(0)));};
+      source.connect(processor);processor.connect(audioContext.destination);
+      audioChunks=[];
+      mediaRecorder=new MediaRecorder(stream,{mimeType:MediaRecorder.isTypeSupported('audio/webm;codecs=opus')?'audio/webm;codecs=opus':'audio/webm'});
+      mediaRecorder.ondataavailable=e=>{if(e.data.size>0)audioChunks.push(e.data);};
+      mediaRecorder.onstop=async()=>{
+        stream.getTracks().forEach(t=>t.stop());
+        if(audioContext){audioContext.close();audioContext=null;}
+        addLogEntry('tool_call','音频处理','编码 MP3...');
+        try {
+          const mp3Blob=await encodeToMp3(leftChannel,48000);
+          if(mp3Blob.size>25*1024*1024){alert('音频过大');return;}
+          addLogEntry('tool_result','音频处理',`MP3 (${(mp3Blob.size/1024).toFixed(1)}KB)`);
+          await uploadAndSendToClaw(mp3Blob);
+        } catch(e){addLogEntry('error','MP3编码',e.message);alert('MP3 编码失败: '+e.message);}
+      };
+      mediaRecorder.start();isRecording=true;
+      btn.textContent='⏹ 停止';btn.classList.add('recording');indicator.classList.add('visible');
+    } catch(e){alert('无法访问麦克风: '+e.message);}
+  } else {
+    if(mediaRecorder&&mediaRecorder.state!=='inactive')mediaRecorder.stop();
+    isRecording=false;btn.textContent='🎤 录音';btn.classList.remove('recording');indicator.classList.remove('visible');
+  }
+}
+
+async function encodeToMp3(channelData,sr){
+  const total=channelData.reduce((s,a)=>s+a.length,0);
+  const pcm=new Int16Array(total);let off=0;
+  for(const arr of channelData)for(let i=0;i<arr.length;i++)pcm[off++]=Math.max(-32768,Math.min(32767,arr[i]*32768));
+  const enc=new lamejs.Mp3Encoder(1,sr,128);const mp3=[];
+  for(let i=0;i<pcm.length;i+=1152){const c=enc.encodeBuffer(pcm.subarray(i,i+1152));if(c.length>0)mp3.push(c);}
+  const f=enc.flush();if(f.length>0)mp3.push(f);
+  return new Blob(mp3,{type:'audio/mp3'});
+}
+
+async function uploadAndSendToClaw(blob){
+  addLogEntry('tool_call','语音上传','保存 MP3 到 Audio/...');
+  const fd=new FormData();fd.append('audio',blob,'recording.mp3');
+  try {
+    const res=await fetch('/api/upload-audio',{method:'POST',body:fd});
+    const data=await res.json();
+    if(data.path){addLogEntry('tool_result','语音上传',`已保存: ${data.path}`);
+      const inst=`帮我识别这个语音：${data.path}。识别完成后，按照语音内容的指令进行执行`;
+      addLogEntry('final','语音指令','已发送给 Claw');sendMessage(inst);
+    } else addLogEntry('error','语音上传',data.error||'失败');
+  } catch(e){addLogEntry('error','语音上传',e.message);}
+}
+
+// ====== 日志 ======
+function addLogEntry(type,name,content){
+  const c=document.getElementById('logContent');const e=c.querySelector('.log-empty');if(e)e.remove();
+  const d=document.createElement('div');d.className='log-entry '+type;
+  d.innerHTML=`<span class="log-type">${type}</span><span class="log-name">${esc(name)}</span><div class="log-body">${esc(content||'')}</div>`;
+  c.appendChild(d);c.scrollTop=c.scrollHeight;
+}
+function clearLog(){document.getElementById('logContent').innerHTML='<div class="log-empty">等待执行任务...</div>';}
+function esc(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML;}
+
+async function exportLog(){
+  if(!currentDir&&!confirm('未选择工作目录，导出到项目根目录？'))return;
+  try {
+    const res=await fetch('/api/export-log',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({save_dir:currentDir||''})});
+    const data=await res.json();
+    if(data.path){alert('✅ 已导出到:\n'+data.path);addLogEntry('final','日志导出','已保存: '+data.path);}else alert('❌ '+(data.error||'失败'));
+  } catch(e){alert('❌ '+e.message);}
+}
+
+async function clearHistory(){
+  if(!confirm('确定清除所有对话历史？'))return;
+  await fetch('/api/clear',{method:'POST'});document.getElementById('messages').innerHTML='';
+  addLogEntry('final','系统','对话已清除');
+}
+
+async function init(){
+  try{const r=await fetch('/api/status');const d=await r.json();document.getElementById('statusText').textContent=`就绪 (${d.tools.length}个工具)`;}catch(e){}
+  addMessage('👋 欢迎使用 Claw Web UI\n\n左侧选择工作目录 → Claw 锁定工作范围\n点击文件可预览内容\n文字/语音输入均可','assistant');
+  addLogEntry('final','系统','Claw Web UI 启动');
+}
+document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>

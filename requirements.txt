@@ -1,0 +1,39 @@
+# ============================================================
+# Claw — 核心依赖
+# 安装: pip install -r requirements.txt
+# ============================================================
+
+# ---- LangChain 生态 ----
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-deepseek>=0.1.0
+langgraph>=0.2.0
+langchain-experimental>=0.3.0       # 提供 Python REPL 工具
+langchain-tavily>=0.1.0             # 联网搜索工具 (Tavily)
+
+# ---- Web 框架 ----
+fastapi>=0.100.0
+uvicorn>=0.20.0
+
+# ---- 工具依赖 ----
+requests>=2.32.0                     # 网络请求
+html2text>=2024.2.26                 # HTML→纯文本（网页抓取）
+PyPDF2>=3.0.0                        # PDF 解析
+python-docx>=1.1.0                   # Word 文档解析
+
+# ---- 语音 / 多模态 ----
+openai>=1.0.0                        # DashScope OpenAI 兼容接口
+dashscope>=1.20.0                    # 千问语音识别 API
+
+# ---- 系统 ----
+python-dotenv>=1.0.0                 # 环境变量加载
+watchdog>=6.0.0                      # 文件系统监听（记忆自动保存）
+
+# ============================================================
+# 以下为可选 / 按需安装（不加 -- 不会影响核心功能）
+# ============================================================
+# llama-index>=0.12.0                 # 知识库 RAG
+# llama-index-embeddings-openai>=0.3.0
+# python-pptx>=0.6.21                # PPT 解析
+# mammoth>=1.6.0                     # Word→Markdown 转换
+# apscheduler>=3.10.0                # 定时任务调度器
