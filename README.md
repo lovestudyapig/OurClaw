@@ -1,7 +1,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/🐾%20OurClaw-v2.0-1a73e8" alt="OurClaw">
   <img src="https://img.shields.io/badge/Python-3.10%2B-blue">
-  <img src="https://img.shields.io/badge/LLM-DeepSeek%20%7C%20Claude%20%7C%20更多-brightgreen">
+  <img src="https://img.shields.io/badge/LLM-DeepSeek%20%7C%20OpenAI%20%7C%20更多-brightgreen">
   <img src="https://img.shields.io/badge/license-MIT-green">
 </p>
 
@@ -16,6 +16,29 @@
   <b>🔥 最强特色：你可以把 Claude/GPT 等任何 AI 的 Skill 融入自己的技能树</b><br>
   <i>只需说一句 ——「把 GitHub 上的 [仓库地址] 技能加入你的技能」即可自动导入！</i>
 </p>
+
+---
+
+## 📢 v2.0 更新内容
+
+> OurClaw v2.0 正式发布！新增了以下核心能力：
+
+### 🧠 大脑模型自由切换
+现在你可以在 `env` 文件中自由选择 Claw 使用的**大脑模型**：
+- `MAIN_MODEL=deepseek` — 使用 DeepSeek（默认，稳定可靠）
+- `MAIN_MODEL=openai` — 使用 OpenAI GPT（需配置 `OPENAI_API_KEY`）
+
+无需修改任何代码，修改 `env` 中的 `MAIN_MODEL` 即可一键切换。
+
+### 🖼️ 新增三大图像工具
+
+| 工具 | 能力 | 说明 |
+|------|------|------|
+| 🎨 **图像生成** (`image_gen_tool`) | 文生图 | 基于 Qwen-Image-2.0 模型，根据文字描述生成图像 |
+| 🔍 **图像分析** (`image_analyzer_tool`) | 图片理解 | 基于 Qwen3.6-Plus 多模态模型，分析图片内容、OCR 识别 |
+| 🧠 **图像理解** (`image_understanding_tool`) | 图文匹配 | 深度理解图片中的文字、物体、场景和布局 |
+
+> 💡 以上图像工具均通过 `DASHSCOPE_API_KEY` 环境变量调用 DashScope（阿里通义千问）API，无需额外配置密钥。
 
 ---
 
@@ -84,7 +107,9 @@ print(response)
 | 📚 **知识检索** | 本地知识库检索 | 查阅历史记录、记忆回溯 |
 | 🧠 **长期记忆** | 记住用户偏好和习惯 | 个性化服务 |
 | ⏰ **定时任务** | 后台定时执行用户任务 | 天气提醒、定时检查 |
-| 🎯 **技能系统** | 可扩展的专业技能框架 | 复杂专项任务 |
+| 🎨 **图像生成** | Qwen-Image-2.0 文生图 | 插图创作、概念设计、AI 绘画 |
+| 🔍 **图像分析** | Qwen3.6-Plus 多模态分析 | 图片内容描述、OCR 识别、场景理解 |
+| 🧠 **图像理解** | 深度图文匹配与布局分析 | 图表解读、物体检测、图像问答 |
 
 ---
 
@@ -148,6 +173,9 @@ OurClaw/
 │   ├── speech_recognition_tool.py  # 🎤 语音识别
 │   ├── pdf_parser_tool.py  #   📄 PDF 解析
 │   ├── word_parser_tool.py #   📝 Word 解析
+│   ├── image_analyzer_tool.py#   🔍 图像分析
+│   ├── image_gen_tool.py#        🎨 图像生成
+│   ├── image_understanding_tool.py#  🧠 图像理解
 │   └── write_memory_tool.py#   🧠 记忆写入
 ├── memory/                 # 💾 记忆存储
 │   ├── IDENTITY.md         #   🆔 身份设定
@@ -183,11 +211,30 @@ OurClaw/
 
 ## ⚙️ 配置说明
 
-在项目根目录创建 `.env` 文件，配置以下三个 API Key。以下是各 Key 的申请教程 👇
+在项目根目录创建 `.env` 文件，配置以下 API Key。以下是各 Key 的申请教程 👇
 
 ---
 
-### 🔑 1. DeepSeek API Key（核心 LLM，必须）
+### 🧠 大脑模型选择
+
+OurClaw v2.0 支持在 DeepSeek 和 OpenAI GPT 之间自由切换：
+
+| 项目 | 说明 |
+|------|------|
+| **配置项** | `MAIN_MODEL=deepseek`（默认）或 `MAIN_MODEL=openai` |
+| **DeepSeek** | 默认模型，稳定可靠，详见下方 DeepSeek 配置 |
+| **OpenAI GPT** | 切换为 `MAIN_MODEL=openai` 后生效，需配置下方 OpenAI 的 Key |
+
+```env
+# 大脑模型选择
+MAIN_MODEL=deepseek        # deepseek 或 openai
+```
+
+> 💡 修改 `MAIN_MODEL` 即可一键切换大脑模型，无需改动任何代码。
+
+---
+
+### 🔑 DeepSeek API Key
 
 | 项目 | 说明 |
 |------|------|
@@ -207,7 +254,27 @@ DEEPSEEK_MODEL=deepseek-chat
 
 ---
 
-### 🔑 2. Tavily API Key（联网搜索，建议配置）
+### 🔑 OpenAI GPT API Key（可选，切换大脑模型时使用）
+
+| 项目 | 说明 |
+|------|------|
+| **用途** | 当 `MAIN_MODEL=openai` 时，驱动 OurClaw 的大模型对话与推理能力 |
+| **申请地址** | [https://platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
+| **注册步骤** | ① 打开链接 → ② 注册/登录 OpenAI 账号 → ③ 进入 API Keys 页面 → ④ 点击「Create new secret key」→ ⑤ 复制生成的 `sk-...` 密钥 |
+| **费用** | 按量计费，需绑定支付方式 |
+
+```env
+# OpenAI 配置（当 MAIN_MODEL=openai 时使用）
+OPENAI_API_KEY=sk-你的key-粘贴到这里
+OPENAI_BASE_URL=https://api.openai.com/v1
+OPENAI_MODEL=gpt-4o
+```
+
+> 💡 `OPENAI_MODEL` 可选值：`gpt-4o`（默认）、`gpt-4o-mini`、`gpt-4-turbo` 等。如需使用兼容 OpenAI 接口的第三方 API，修改 `OPENAI_BASE_URL` 即可。
+
+---
+
+### 🔑 Tavily API Key（联网搜索，建议配置）
 
 | 项目 | 说明 |
 |------|------|
@@ -225,21 +292,21 @@ TAVILY_API_KEY=tvly-你的key-粘贴到这里
 
 ---
 
-### 🔑 3. DashScope API Key（语音识别，按需配置）
+### 🔑 DashScope API Key（语音识别 & 图像工具，按需配置）
 
 | 项目 | 说明 |
 |------|------|
-| **用途** | 使用阿里通义千问 Qwen 多模态模型进行语音转文字（支持 WAV/MP3/M4A 等格式） |
+| **用途** | 使用阿里通义千问 Qwen 多模态模型进行语音转文字和图像生成/分析/理解（支持 WAV/MP3/M4A/JPG/PNG 等格式） |
 | **申请地址** | [https://bailian.console.aliyun.com/](https://bailian.console.aliyun.com/) |
 | **注册步骤** | ① 打开链接 → ② 使用阿里云账号登录（未注册则先注册）→ ③ 进入 **百炼** 控制台 → ④ 左侧菜单 **API-KEY 管理** → ⑤ 点击 **创建 API-KEY** → ⑥ 复制生成的 `sk-...` 密钥 |
-| **费用** | 新用户有免费额度；语音识别模型按字符计费，价格低廉 |
+| **费用** | 新用户有免费额度；语音识别模型按字符计费，图像模型按次计费，价格低廉 |
 
 ```env
-# 可选：DashScope API Key（语音识别用）
+# 可选：DashScope API Key（语音识别 & 图像工具用）
 DASHSCOPE_API_KEY=sk-你的key-粘贴到这里
 ```
 
-> ⚠️ 不配置此 key 则语音识别功能不可用。
+> ⚠️ 不配置此 key 则语音识别和图像工具均不可用。
 
 ---
 
@@ -266,24 +333,24 @@ pip install -r requirements.txt
 核心依赖一览：
 - `langchain` / `langgraph` — LLM 应用框架
 - `fastapi` / `uvicorn` — Web 服务
-- `deepseek` — 大模型驱动
+- `deepseek` — 大模型驱动（默认）
+- `openai` / `langchain-openai` — GPT 模型驱动（可选切换）
 - `tavily` — 联网搜索
-- `dashscope` — 语音识别
+- `dashscope` — 语音识别 & 图像生成/分析/理解
 - `PyPDF2` / `python-docx` — 文档解析
 
 ---
 
 ## 🔮 未来规划
 
-- [ ] 支持更多 LLM 后端（GPT-4o、Claude、本地模型）
 - [ ] 技能市场 — 社区共享技能包
 - [ ] 知识库 RAG — 上传文档自动构建知识库
-- [ ] 多模态识别 — 图片/视频理解
+- [ ] 本地模型支持（Ollama / llama.cpp）
 - [ ] 插件系统 — 更灵活的能力扩展
 
 ---
 
 <p align="center">
-  <b>🐾 OurClaw — 你的智能小龙瞎，自动完成你的任务</b><br>
+  <b>🐾 OurClaw — 你的智能小龙虾，自动完成你的任务</b><br>
   <i>从今天开始，让 AI 替你干活</i>
 </p>

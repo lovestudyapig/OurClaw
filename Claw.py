@@ -14,6 +14,7 @@ load_dotenv()
 from langgraph.prebuilt import create_react_agent
 from langchain_core.messages import HumanMessage
 from langchain_deepseek import ChatDeepSeek
+from langchain_openai import ChatOpenAI
 
 from background_loop import BackgroundLoop
 from memory_manager import MemoryManager
@@ -89,20 +90,37 @@ class CoreClawAgent:
         self.tools = get_all_tools(self.base_dir)
         self.work_dir: Path | None = None  # 用户工作目录（可选）
 
-        # 初始化模型 (默认 DeepSeek)
-        api_key = os.getenv("DEEPSEEK_API_KEY")
-        base_url = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
-        model_name = model or os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
+        # 模型路由：根据 MAIN_MODEL 选择 DeepSeek 或 OpenAI
+        main_model = os.getenv("MAIN_MODEL", "deepseek").strip().lower()
 
-        if not api_key:
-            raise ValueError("DEEPSEEK_API_KEY not found in environment")
+        if main_model == "openai":
+            openai_api_key = os.getenv("OPENAI_API_KEY")
+            openai_base_url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
+            openai_model = os.getenv("OPENAI_MODEL", "gpt-4o")
+            if not openai_api_key:
+                raise ValueError("OPENAI_API_KEY not found in environment")
 
-        self.llm = ChatDeepSeek(
-            model=model_name,
-            api_key=api_key,
-            base_url=base_url,
-            temperature=0.2,
-        )
+            self.llm = ChatOpenAI(
+                model=openai_model,
+                api_key=openai_api_key,
+                base_url=openai_base_url,
+                temperature=0.2,
+            )
+        else:
+            # 初始化模型 (默认 DeepSeek)
+            api_key = os.getenv("DEEPSEEK_API_KEY")
+            base_url = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
+            model_name = model or os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
+
+            if not api_key:
+                raise ValueError("DEEPSEEK_API_KEY not found in environment")
+
+            self.llm = ChatDeepSeek(
+                model=model_name,
+                api_key=api_key,
+                base_url=base_url,
+                temperature=0.2,
+            )
 
         # 初始化记忆管理器（传入 LLM 用于主动提取记忆）
         self.memory = MemoryManager(self.base_dir, llm_client=self.llm)
