@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  ourclaw:
+    build: .
+    container_name: ourclaw
+    ports:
+      - "8080:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./memory:/app/memory
+      - ./Audio:/app/Audio
+      - ./memory/logs:/app/memory/logs
+    restart: unless-stopped

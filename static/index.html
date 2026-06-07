@@ -157,7 +157,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto
 </div>
 
 <script>
-let mediaRecorder = null, audioContext = null, audioChunks = [], isRecording = false, currentDir = '';
+let mediaRecorder = null, audioContext = null, audioChunks = [], isRecording = false, currentDir = '', _isComposing = false, _compEndTs = 0;
 
 // ====== 本地文件存储（webkitdirectory 选中的文件） ======
 let _localFiles = {};  // webkitRelativePath -> File
@@ -372,8 +372,20 @@ function addMessage(content,type){
   return id;
 }
 
-function onInputKeydown(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
-document.getElementById('chatInput').addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';});
+function onInputKeydown(e){
+  if(e.key==='Enter'&&!e.shiftKey){
+    // 输入法组合中（原生属性 + 手工标记 + 组合结束冷却期，三重保险）
+    if(e.isComposing||_isComposing||Date.now()-_compEndTs<300){
+      return;
+    }
+    e.preventDefault();
+    sendMessage();
+  }
+}
+const chatInput=document.getElementById('chatInput');
+chatInput.addEventListener('compositionstart',()=>{_isComposing=true;});
+chatInput.addEventListener('compositionend',()=>{_isComposing=false;_compEndTs=Date.now();});
+chatInput.addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';});
 
 // ====== 录音→MP3→保存→Claw ======
 async function toggleRecording() {
