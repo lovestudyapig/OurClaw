@@ -1,0 +1,21 @@
+# Main model selector: "deepseek" or "openai"
+MAIN_MODEL=deepseek
+
+# DeepSeek API Configuration
+DEEPSEEK_API_KEY=sk-
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_MODEL=deepseek-reasoner
+
+# OpenAI GPT API Configuration (used when MAIN_MODEL=openai)
+OPENAI_API_KEY=your-openai-api-key-here
+OPENAI_BASE_URL=https://api.openai.com/v1
+OPENAI_MODEL=gpt-4o
+
+# Tavily API Configuration (for web search)
+TAVILY_API_KEY=tvly-dev-
+
+# DashScope API Configuration (for Qwen multimodal tools)
+DASHSCOPE_API_KEY=sk-
+DASHSCOPE_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+
+
